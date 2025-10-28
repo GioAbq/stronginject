@@ -12807,19 +12807,19 @@ public class C {}";
             // (24,22): Error SI0102: Error while resolving dependencies for 'T1': We have no source for instance of type 'T1'
             // Container5
             new DiagnosticResult("SI0102", @"Container5", DiagnosticSeverity.Error).WithLocation(24, 22),
-            // (24,22): Warning SI1106: Warning while resolving dependencies for 'T1': factory method 'StrongInject.Generator.FactoryMethod' cannot be used to resolve instance of type 'T1' as the required type arguments do not satisfy the generic constraints.
+            // (24,22): Warning SI1106: Warning while resolving dependencies for 'T1': factory method 'Container5<T1>.Resolve<T>()' cannot be used to resolve instance of type 'T1' as the required type arguments do not satisfy the generic constraints.
             // Container5
             new DiagnosticResult("SI1106", @"Container5", DiagnosticSeverity.Warning).WithLocation(24, 22),
             // (29,22): Error SI0102: Error while resolving dependencies for 'T2': We have no source for instance of type 'T2'
             // Container6
             new DiagnosticResult("SI0102", @"Container6", DiagnosticSeverity.Error).WithLocation(29, 22),
-            // (29,22): Warning SI1106: Warning while resolving dependencies for 'T2': factory method 'StrongInject.Generator.FactoryMethod' cannot be used to resolve instance of type 'T2' as the required type arguments do not satisfy the generic constraints.
+            // (29,22): Warning SI1106: Warning while resolving dependencies for 'T2': factory method 'Container6<T1, T2>.Resolve<T>()' cannot be used to resolve instance of type 'T2' as the required type arguments do not satisfy the generic constraints.
             // Container6
             new DiagnosticResult("SI1106", @"Container6", DiagnosticSeverity.Warning).WithLocation(29, 22),
             // (34,22): Error SI0102: Error while resolving dependencies for 'C': We have no source for instance of type 'C'
             // Container7
             new DiagnosticResult("SI0102", @"Container7", DiagnosticSeverity.Error).WithLocation(34, 22),
-            // (34,22): Warning SI1106: Warning while resolving dependencies for 'C': factory method 'StrongInject.Generator.FactoryMethod' cannot be used to resolve instance of type 'C' as the required type arguments do not satisfy the generic constraints.
+            // (34,22): Warning SI1106: Warning while resolving dependencies for 'C': factory method 'Container7.Resolve<T>()' cannot be used to resolve instance of type 'C' as the required type arguments do not satisfy the generic constraints.
             // Container7
             new DiagnosticResult("SI1106", @"Container7", DiagnosticSeverity.Warning).WithLocation(34, 22));
         Assert.Equal(7, generated.Length);

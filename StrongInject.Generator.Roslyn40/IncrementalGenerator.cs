@@ -150,12 +150,19 @@ namespace StrongInject.Generator
         {
             var cancellationToken = context.CancellationToken;
             
-            // Now we need to get the symbol back from the compilation
-            // This is OK because we're in the final output stage
-            var symbol = compilation.GetTypeByMetadataName(
-                info.FullyQualifiedMetadataName.Replace("global::", "").Replace("<", "`").Split('`')[0]);
+            // Retrieve the symbol using the cached location
+            // GetTypeByMetadataName doesn't work for generic types, so we use the location
+            var syntaxTree = info.Location.SourceTree;
+            if (syntaxTree is null)
+                return;
             
-            if (symbol is null)
+            var semanticModel = compilation.GetSemanticModel(syntaxTree);
+            var syntaxNode = syntaxTree.GetRoot(cancellationToken).FindNode(info.Location.SourceSpan);
+            
+            if (syntaxNode is not ClassDeclarationSyntax classDecl)
+                return;
+            
+            if (semanticModel.GetDeclaredSymbol(classDecl, cancellationToken) is not INamedTypeSymbol symbol)
                 return;
 
             if (!WellKnownTypes.TryCreate(compilation, context.ReportDiagnostic, out var wellKnownTypes))
