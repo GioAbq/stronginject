@@ -170,19 +170,27 @@ namespace StrongInject.Generator
 
             var registrationCalculator = new RegistrationCalculator(compilation, wellKnownTypes, cancellationToken);
 
-            // Check visibility for both containers and modules
+            if (!info.IsContainer)
+            {
+                // This is a module - validate registrations first, then check visibility
+                registrationCalculator.ValidateModuleRegistrations(symbol, context.ReportDiagnostic);
+                
+                // Check visibility (report but don't early return to allow registration validation)
+                if (!symbol.IsInternal() && !symbol.IsPublic())
+                {
+                    context.ReportDiagnostic(ModuleNotPublicOrInternal(
+                        symbol,
+                        info.Location));
+                }
+                return;
+            }
+
+            // Check visibility for containers
             if (!symbol.IsInternal() && !symbol.IsPublic())
             {
                 context.ReportDiagnostic(ModuleNotPublicOrInternal(
                     symbol,
                     info.Location));
-                return;
-            }
-
-            if (!info.IsContainer)
-            {
-                // This is a module - just validate it
-                registrationCalculator.ValidateModuleRegistrations(symbol, context.ReportDiagnostic);
                 return;
             }
 
