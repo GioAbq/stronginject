@@ -77,19 +77,15 @@ namespace StrongInject.Generator.Tests.Unit
         
         protected Compilation RunGenerator(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, out ImmutableArray<string> generatedFiles)
         {
-            CreateDriver(compilation, new SourceGenerator()).RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out diagnostics);
-            CreateDriver(compilation, new IncrementalGenerator().AsSourceGenerator()).RunGeneratorsAndUpdateCompilation(compilation, out var incrementalCompilation, out var incrementalDiagnostics);
+            // StrongInject 2.0: Only incremental generator (Roslyn 4.0+)
+            // Requires: Visual Studio 2022, .NET 6 SDK or later
+            CreateDriver(compilation, new IncrementalGenerator().AsSourceGenerator()).RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out diagnostics);
             var generatedTrees = updatedCompilation.SyntaxTrees.Where(x => !compilation.SyntaxTrees.Any(y => y.Equals(x))).ToImmutableArray();
-            var incrementalGeneratedTrees = incrementalCompilation.SyntaxTrees.Where(x => !compilation.SyntaxTrees.Any(y => y.Equals(x))).ToImmutableArray();
             foreach (var generated in generatedTrees)
             {
                 _outputHelper.WriteLine($"{generated.FilePath}:\n{generated.GetText()}");
             }
             generatedFiles = generatedTrees.Select(x => x.GetText().ToString()).ToImmutableArray();
-            
-            var incrementalGeneratedFiles = incrementalGeneratedTrees.Select(x => x.GetText().ToString()).ToImmutableArray();
-            generatedFiles.Should().BeEquivalentTo(incrementalGeneratedFiles);
-            diagnostics.Select(x => x.ToString()).Should().BeEquivalentTo(incrementalDiagnostics.Select(x => x.ToString()));
             
             return updatedCompilation;
         }
