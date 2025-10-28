@@ -58,7 +58,7 @@ namespace StrongInject.Generator
                     var info = new ContainerOrModuleInfo(
                         FullyQualifiedMetadataName: symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         IsContainer: isContainer,
-                        Location: candidate.GetLocation(),
+                        Location: candidate.Identifier.GetLocation(), // Use Identifier location for precise diagnostic positioning
                         Interfaces: new EquatableArray<string>(
                             symbol.AllInterfaces
                                 .Select(i => i.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
@@ -170,6 +170,15 @@ namespace StrongInject.Generator
 
             var registrationCalculator = new RegistrationCalculator(compilation, wellKnownTypes, cancellationToken);
 
+            // Check visibility for both containers and modules
+            if (!symbol.IsInternal() && !symbol.IsPublic())
+            {
+                context.ReportDiagnostic(ModuleNotPublicOrInternal(
+                    symbol,
+                    info.Location));
+                return;
+            }
+
             if (!info.IsContainer)
             {
                 // This is a module - just validate it
@@ -178,15 +187,6 @@ namespace StrongInject.Generator
             }
 
             // It's a container - generate full implementation
-
-            // Check visibility for containers
-            if (!symbol.IsInternal() && !symbol.IsPublic())
-            {
-                context.ReportDiagnostic(ModuleNotPublicOrInternal(
-                    symbol,
-                    info.Location));
-                return;
-            }
 
             // Generate container implementation
             var file = ContainerGenerator.GenerateContainerImplementations(
