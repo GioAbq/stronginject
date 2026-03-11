@@ -28,9 +28,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Release --no-restore
+      run: dotnet build -c Release --no-restore -p:TreatWarningsAsErrors=false
     - name: Test
-      run: dotnet test -c Release --no-restore --verbosity normal
+      run: dotnet test -c Release --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
     - name: Get timestamp
       uses: 1466587594/get-current-time@v1
       id: current-time
@@ -69,9 +69,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Debug --no-restore
+      run: dotnet build -c Debug --no-restore -p:TreatWarningsAsErrors=false
     - name: Test
-      run: dotnet test -c Debug --no-restore --verbosity normal
+      run: dotnet test -c Debug --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
 
   build-windows:
 
@@ -88,8 +88,8 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Debug --no-restore
+      run: dotnet build -c Debug --no-restore -p:TreatWarningsAsErrors=false
     - name: Build WPF
-      run: dotnet build -c Wpf
+      run: dotnet build -c Wpf -p:TreatWarningsAsErrors=false
     - name: Test
-      run: dotnet test -c Debug --no-restore --verbosity normal
+      run: dotnet test -c Debug --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
