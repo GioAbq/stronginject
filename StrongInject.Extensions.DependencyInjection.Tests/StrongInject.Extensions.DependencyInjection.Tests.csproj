@@ -22,7 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StrongInject.Extensions.DependencyInjection.AspNetCore\StrongInject.Extensions.DependencyInjection.AspNetCore.csproj" />
     <ProjectReference Include="..\StrongInject.Generator\StrongInject.Generator.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\StrongInject.Generator.Roslyn38\StrongInject.Generator.Roslyn38.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\StrongInject.Generator.Roslyn40\StrongInject.Generator.Roslyn40.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
 </Project>
