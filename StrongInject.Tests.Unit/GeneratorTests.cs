@@ -24498,7 +24498,7 @@ public class Module {
     }
 
     [Fact]
-    public void FactoryOfGenericMustHaveMethodReturnTypeParameter()
+    public void FactoryOfOpenGenericWithMatchingReturnTypeInModule()
     {
 
         string userSource = @"
@@ -24509,10 +24509,179 @@ public class Module {
     [FactoryOf(typeof(Dictionary<,>))] public static Dictionary<T1, T2> M1<T1, T2>() => default;
 }";
         var comp = RunGeneratorWithStrongInjectReference(userSource, out var generatorDiagnostics, out var generated);
+        generatorDiagnostics.Verify();
+        comp.GetDiagnostics().Verify();
+        Assert.Empty(generated);
+    }
+
+    [Fact]
+    public void FactoryOfOpenGenericWithConstructedGenericReturnType()
+    {
+
+        string userSource = @"
+using StrongInject;
+
+public interface ILogger<T> {}
+public class Logger<T> : ILogger<T> {}
+
+public partial class Container : IContainer<ILogger<string>>, IContainer<ILogger<int>> {
+    [FactoryOf(typeof(ILogger<>))] public static ILogger<T> CreateLogger<T>() => new Logger<T>();
+}";
+        var comp = RunGeneratorWithStrongInjectReference(userSource, out var generatorDiagnostics, out var generated);
+        generatorDiagnostics.Verify();
+        comp.GetDiagnostics().Verify();
+        var file = Assert.Single(generated);
+        file.Should().BeIgnoringLineEndings(@"#pragma warning disable CS1998
+partial class Container
+{
+    private int _disposed = 0;
+    private bool Disposed => _disposed != 0;
+    public void Dispose()
+    {
+        var disposed = global::System.Threading.Interlocked.Exchange(ref this._disposed, 1);
+        if (disposed != 0)
+            return;
+    }
+
+    TResult global::StrongInject.IContainer<global::ILogger<global::System.String>>.Run<TResult, TParam>(global::System.Func<global::ILogger<global::System.String>, TParam, TResult> func, TParam param)
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::ILogger<global::System.String> iLogger_0_0;
+        iLogger_0_0 = global::Container.CreateLogger<global::System.String>();
+        TResult result;
+        try
+        {
+            result = func(iLogger_0_0, param);
+        }
+        finally
+        {
+            global::StrongInject.Helpers.Dispose(iLogger_0_0);
+        }
+        return result;
+    }
+
+    global::StrongInject.Owned<global::ILogger<global::System.String>> global::StrongInject.IContainer<global::ILogger<global::System.String>>.Resolve()
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::ILogger<global::System.String> iLogger_0_0;
+        iLogger_0_0 = global::Container.CreateLogger<global::System.String>();
+        return new global::StrongInject.Owned<global::ILogger<global::System.String>>(iLogger_0_0, () =>
+        {
+            global::StrongInject.Helpers.Dispose(iLogger_0_0);
+        });
+    }
+
+    TResult global::StrongInject.IContainer<global::ILogger<global::System.Int32>>.Run<TResult, TParam>(global::System.Func<global::ILogger<global::System.Int32>, TParam, TResult> func, TParam param)
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::ILogger<global::System.Int32> iLogger_0_0;
+        iLogger_0_0 = global::Container.CreateLogger<global::System.Int32>();
+        TResult result;
+        try
+        {
+            result = func(iLogger_0_0, param);
+        }
+        finally
+        {
+            global::StrongInject.Helpers.Dispose(iLogger_0_0);
+        }
+        return result;
+    }
+
+    global::StrongInject.Owned<global::ILogger<global::System.Int32>> global::StrongInject.IContainer<global::ILogger<global::System.Int32>>.Resolve()
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::ILogger<global::System.Int32> iLogger_0_0;
+        iLogger_0_0 = global::Container.CreateLogger<global::System.Int32>();
+        return new global::StrongInject.Owned<global::ILogger<global::System.Int32>>(iLogger_0_0, () =>
+        {
+            global::StrongInject.Helpers.Dispose(iLogger_0_0);
+        });
+    }
+}
+");
+    }
+
+    [Fact]
+    public void FactoryOfOpenGenericWithMultiTypeParamConstructedReturnType()
+    {
+
+        string userSource = @"
+using StrongInject;
+using System.Collections.Generic;
+
+public partial class Container : IContainer<Dictionary<string, int>> {
+    [FactoryOf(typeof(Dictionary<,>))] public static Dictionary<T1, T2> Create<T1, T2>() => new Dictionary<T1, T2>();
+}";
+        var comp = RunGeneratorWithStrongInjectReference(userSource, out var generatorDiagnostics, out var generated);
+        generatorDiagnostics.Verify();
+        comp.GetDiagnostics().Verify();
+        var file = Assert.Single(generated);
+        file.Should().BeIgnoringLineEndings(@"#pragma warning disable CS1998
+partial class Container
+{
+    private int _disposed = 0;
+    private bool Disposed => _disposed != 0;
+    public void Dispose()
+    {
+        var disposed = global::System.Threading.Interlocked.Exchange(ref this._disposed, 1);
+        if (disposed != 0)
+            return;
+    }
+
+    TResult global::StrongInject.IContainer<global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32>>.Run<TResult, TParam>(global::System.Func<global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32>, TParam, TResult> func, TParam param)
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32> dictionary_0_0;
+        dictionary_0_0 = global::Container.Create<global::System.String, global::System.Int32>();
+        TResult result;
+        try
+        {
+            result = func(dictionary_0_0, param);
+        }
+        finally
+        {
+            global::StrongInject.Helpers.Dispose(dictionary_0_0);
+        }
+        return result;
+    }
+
+    global::StrongInject.Owned<global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32>> global::StrongInject.IContainer<global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32>>.Resolve()
+    {
+        if (Disposed)
+            throw new global::System.ObjectDisposedException(nameof(Container));
+        global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32> dictionary_0_0;
+        dictionary_0_0 = global::Container.Create<global::System.String, global::System.Int32>();
+        return new global::StrongInject.Owned<global::System.Collections.Generic.Dictionary<global::System.String, global::System.Int32>>(dictionary_0_0, () =>
+        {
+            global::StrongInject.Helpers.Dispose(dictionary_0_0);
+        });
+    }
+}
+");
+    }
+
+    [Fact]
+    public void FactoryOfOpenGenericWithNonMatchingReturnType()
+    {
+
+        string userSource = @"
+using StrongInject;
+using System.Collections.Generic;
+
+public class Module {
+    [FactoryOf(typeof(IEnumerable<>))] public static List<T> M1<T>() => default;
+}";
+        var comp = RunGeneratorWithStrongInjectReference(userSource, out var generatorDiagnostics, out var generated);
         generatorDiagnostics.Verify(
-            // (6,6): Error SI0028: Method 'Module.M1<T1, T2>()' marked with FactoryOfAttribute of open generic type 'System.Collections.Generic.Dictionary<,>' must have a single type parameter, and return that type parameter.
-            // FactoryOf(typeof(Dictionary<,>))
-            new DiagnosticResult("SI0028", @"FactoryOf(typeof(Dictionary<,>))", DiagnosticSeverity.Error).WithLocation(6, 6));
+            // (6,6): Error SI0028: Method 'Module.M1<T>()' marked with FactoryOfAttribute of open generic type 'System.Collections.Generic.IEnumerable<>' must return either a type parameter, or a constructed generic type matching the FactoryOf type.
+            // FactoryOf(typeof(IEnumerable<>))
+            new DiagnosticResult("SI0028", @"FactoryOf(typeof(IEnumerable<>))", DiagnosticSeverity.Error).WithLocation(6, 6));
         comp.GetDiagnostics().Verify();
         Assert.Empty(generated);
     }
