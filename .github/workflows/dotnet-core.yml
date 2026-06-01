@@ -49,6 +49,10 @@ jobs:
         dotnet pack StrongInject.Extensions.DependencyInjection/StrongInject.Extensions.DependencyInjection.csproj -c Release --include-source -o out
         dotnet pack StrongInject.Extensions.DependencyInjection.AspNetCore/StrongInject.Extensions.DependencyInjection.AspNetCore.csproj -c Release --include-source -o out
       if: github.event.inputs.is_stronginject_release == 'true'
+    - name: Smoke test packaged generator
+      run: |
+        chmod +x eng/package-smoke-test.sh
+        eng/package-smoke-test.sh out
     - name: Push
       if: ${{ success() && github.ref == 'refs/heads/main' }}
       run: |
