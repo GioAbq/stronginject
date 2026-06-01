@@ -27,6 +27,8 @@
 
   <ItemGroup>
     <!-- Package only Roslyn 4.0+ analyzer (VS 2022, .NET 6+ SDK required) -->
+    <!-- Shared generator logic assembly the analyzer loads at runtime - MUST be packaged alongside the Roslyn40 analyzer, otherwise generation fails with FileNotFoundException for StrongInject.Generator -->
+    <None Include="$(OutputPath)\netstandard2.0\StrongInject.Generator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="$(OutputPath)\netstandard2.0\StrongInject.Generator.Roslyn40.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="buildTransitive\**\*" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
