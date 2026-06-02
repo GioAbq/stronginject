@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- This is a standalone local dev benchmark, NOT part of StrongInject.sln and NOT shipped.
+         Override the strict analysis settings inherited from the root Directory.Build.props so the
+         reflection / AssemblyLoadContext code does not fail the build. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <AnalysisMode>Default</AnalysisMode>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);NU1701;NU1603;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Host Roslyn. Both generators were compiled against 4.0.1 but are forward-compatible, and the
+         incremental step-tracking API (GeneratorDriverOptions.trackIncrementalGeneratorSteps,
+         TrackedOutputSteps, IncrementalStepRunReason) only exists from 4.1+, so the host uses a recent
+         4.x - which is also more representative of a current SDK/IDE. The generators load into isolated
+         AssemblyLoadContexts that delegate Microsoft.CodeAnalysis.* back to this host copy; Workspaces is
+         a superset covering every runtime dependency either generator might touch. The comparison stays
+         fair because BOTH generators run on this same host Roslyn. Pinned to 4.14.0 to match the Roslyn
+         that BenchmarkDotNet 0.15.8 pulls in (it depends on Microsoft.CodeAnalysis.CSharp >= 4.14.0);
+         a single host Roslyn version keeps the comparison fair and avoids a NU1107 version conflict. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+
+    <!-- Etap 2: rigorous wall-clock numbers. Run with the "bench" arg (see Program.Main). We use the
+         InProcessEmit toolchain (configured in GeneratorBenchmark.BuildConfig) rather than the default
+         child-process toolchain on purpose: the default toolchain generates a bootstrap .csproj under
+         this repo tree, which would inherit the strict root Directory.Build.props (TreatWarningsAsErrors,
+         analyzers-as-errors, a logo-circle.png None item that cannot resolve from the generated folder)
+         and fail to build. In-process keeps the AssemblyLoadContext and SI_V200 env overrides working
+         with no child build. -->
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+</Project>
