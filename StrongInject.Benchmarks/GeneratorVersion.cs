@@ -17,17 +17,25 @@ namespace StrongInject.Benchmarks
     }
 
     /// <summary>
-    /// Absolute paths to the packaged generator/runtime DLLs in the global NuGet cache (X:\N).
-    /// Verified present on disk. These are intentionally machine-local: this is a dev-only
-    /// benchmark that compares the actual shipped analyzer artifacts.
+    /// Absolute paths to the packaged generator/runtime DLLs in the NuGet global packages folder.
+    /// The folder is resolved from the environment (NUGET_PACKAGES, else the default ~/.nuget/packages),
+    /// so this runs on any machine. This is a dev-only benchmark that compares the actual shipped
+    /// analyzer artifacts.
     /// </summary>
     public static class GeneratorPaths
     {
-        private const string Cache = @"X:\N\stronginject";
+        // The NuGet global packages folder is configurable; honour NUGET_PACKAGES, else the default location.
+        private static readonly string Cache = Path.Combine(NuGetGlobalPackages(), "stronginject");
+
+        private static string NuGetGlobalPackages()
+            => System.Environment.GetEnvironmentVariable("NUGET_PACKAGES")
+               ?? Path.Combine(
+                   System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+                   ".nuget", "packages");
 
         // Per-version environment overrides, e.g. SI_V200_ROSLYN40 / SI_V200_GENERATOR / SI_V200_STRONGINJECT.
         // Used to point the harness at a freshly built generator (bin/Release) when validating a fix,
-        // without the pack-and-restore-into-X:\N dance.
+        // without the pack-and-restore-into-the-cache dance.
         private static string Env(GeneratorVersion version, string suffix)
             => System.Environment.GetEnvironmentVariable($"SI_{version}_{suffix}");
 
