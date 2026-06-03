@@ -366,3 +366,10 @@ FodyWeavers.xsd
 
 #Intellij
 .idea/*
+
+# Cursor IDE / AI planning docs
+.cursor/
+.cursorindexingignore
+
+# SpecStory session history (chat transcripts)
+.specstory/
