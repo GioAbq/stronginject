@@ -9,14 +9,14 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace StrongInject.Benchmarks
 {
     /// <summary>
-    /// Etap 2: rigorous wall-clock comparison of the StrongInject 1.4.4 vs 2.0 incremental generators,
+    /// Stage 2: rigorous wall-clock comparison of the StrongInject 1.4.4 vs 2.0 incremental generators,
     /// measured with BenchmarkDotNet's statistical engine (warmup, multiple iterations, outlier removal).
-    /// This complements <see cref="Diagnostics"/> (Etap 1), which proves the deterministic re-compute
+    /// This complements <see cref="Diagnostics"/> (Stage 1), which proves the deterministic re-compute
     /// counts; here we put real time + allocation numbers on those three scenarios.
     ///
     /// Each (Version) value is a separate benchmark case. <see cref="Setup"/> builds an isolated
     /// <see cref="GeneratorLoadContext"/>, the synthetic compilation, a warmed driver, and the two edited
-    /// compilations; <see cref="Cleanup"/> unloads the context. The benchmark methods mirror the Etap 1
+    /// compilations; <see cref="Cleanup"/> unloads the context. The benchmark methods mirror the Stage 1
     /// scenarios exactly so the numbers line up with the determinstic counts in the report.
     /// </summary>
     [MemoryDiagnoser]

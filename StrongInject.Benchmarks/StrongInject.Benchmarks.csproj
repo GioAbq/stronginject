@@ -30,7 +30,7 @@
          a single host Roslyn version keeps the comparison fair and avoids a NU1107 version conflict. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
 
-    <!-- Etap 2: rigorous wall-clock numbers. Run with the "bench" arg (see Program.Main). We use the
+    <!-- Stage 2: rigorous wall-clock numbers. Run with the "bench" arg (see Program.Main). We use the
          InProcessEmit toolchain (configured in GeneratorBenchmark.BuildConfig) rather than the default
          child-process toolchain on purpose: the default toolchain generates a bootstrap .csproj under
          this repo tree, which would inherit the strict root Directory.Build.props (TreatWarningsAsErrors,

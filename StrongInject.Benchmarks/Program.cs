@@ -13,8 +13,8 @@ namespace StrongInject.Benchmarks
     {
         private static int Main(string[] args)
         {
-            // Etap 2: `dotnet run -c Release -- bench` runs the BenchmarkDotNet wall-clock comparison.
-            // Default (no arg): Etap 1 deterministic re-compute / CS8785 diagnostic.
+            // Stage 2: `dotnet run -c Release -- bench` runs the BenchmarkDotNet wall-clock comparison.
+            // Default (no arg): Stage 1 deterministic re-compute / CS8785 diagnostic.
             if (args.Length > 0 && IsBenchArg(args[0]))
             {
                 BenchmarkRunner.Run<GeneratorBenchmark>(GeneratorBenchmark.BuildConfig());
