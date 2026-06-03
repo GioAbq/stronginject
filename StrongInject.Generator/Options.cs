@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StrongInject.Generator
 {
@@ -6,6 +7,9 @@ namespace StrongInject.Generator
     /// Provides options to configure a registration
     /// </summary>
     [Flags]
+    [SuppressMessage("Design", "CA1008:Enums should have zero value", Justification = "'Default' is the public API name for the zero value; renaming to 'None' would break consumers.")]
+    [SuppressMessage("Design", "CA1069:Enums should not have duplicate values", Justification = "FactoryTargetScope bits are intentionally packed; the zero pattern coincides with Default by design.")]
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification = "'Options' is established public API; renaming would break consumers.")]
     public enum Options : long
     {
         Default = 0,

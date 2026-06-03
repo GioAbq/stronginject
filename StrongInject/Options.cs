@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StrongInject
 {
@@ -6,6 +7,8 @@ namespace StrongInject
     /// Provides options to configure a registration
     /// </summary>
     [Flags]
+    [SuppressMessage("Design", "CA1008:Enums should have zero value", Justification = "'Default' is the public API name for the zero value; renaming to 'None' would break consumers.")]
+    [SuppressMessage("Design", "CA1069:Enums should not have duplicate values", Justification = "FactoryTargetScopeShouldBeInstancePerResolution maps Scope.InstancePerResolution (0) into the scope bits, so its value is 0 by design - the default scope. Removing the overlap would change the flag semantics.")]
     public enum Options : long
     {
         Default = 0,

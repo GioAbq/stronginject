@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StrongInject
 {
@@ -6,6 +7,7 @@ namespace StrongInject
     /// Provides options to configure a decorator registration
     /// </summary>
     [Flags]
+    [SuppressMessage("Design", "CA1008:Enums should have zero value", Justification = "'Default' is the public API name for the zero value; renaming to 'None' would break consumers.")]
     public enum DecoratorOptions : long
     {
         Default = 0,

@@ -28,15 +28,15 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Release --no-restore -p:TreatWarningsAsErrors=false
+      run: dotnet build -c Release --no-restore
     - name: Test
-      run: dotnet test -c Release --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
+      run: dotnet test -c Release --no-restore --verbosity normal
     - name: Get timestamp
       uses: 1466587594/get-current-time@v1
       id: current-time
       with:
         format: YYYYMMDD-HHmmSS
-    
+
     - name: Pack Preview StrongInject
       run: |
         dotnet pack StrongInject/StrongInject.csproj -c Release --include-source -o out --version-suffix "CI-${{ steps.current-time.outputs.formattedTime }}"
@@ -57,7 +57,7 @@ jobs:
       if: ${{ success() && github.ref == 'refs/heads/main' }}
       run: |
         dotnet nuget push 'out/*.nupkg' -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
-      
+
   build-test-debug:
 
     runs-on: ubuntu-latest
@@ -73,9 +73,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Debug --no-restore -p:TreatWarningsAsErrors=false
+      run: dotnet build -c Debug --no-restore
     - name: Test
-      run: dotnet test -c Debug --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
+      run: dotnet test -c Debug --no-restore --verbosity normal
 
   build-windows:
 
@@ -92,8 +92,8 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build -c Debug --no-restore -p:TreatWarningsAsErrors=false
+      run: dotnet build -c Debug --no-restore
     - name: Build WPF
-      run: dotnet build -c Wpf -p:TreatWarningsAsErrors=false
+      run: dotnet build -c Wpf
     - name: Test
-      run: dotnet test -c Debug --no-restore --verbosity normal -p:TreatWarningsAsErrors=false
+      run: dotnet test -c Debug --no-restore --verbosity normal

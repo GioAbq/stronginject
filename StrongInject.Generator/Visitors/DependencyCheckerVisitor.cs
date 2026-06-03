@@ -387,7 +387,7 @@ namespace StrongInject.Generator.Visitors
             void Format(IMethodSymbol method)
             {
                 result.Append(method.ReturnType);
-                result.Append(" ");
+                result.Append(' ');
                 result.Append(method);
             }
         }

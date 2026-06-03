@@ -48,7 +48,7 @@ Visual Studio 2019 and .NET 5 SDK use Roslyn 3.x and cannot run incremental gene
 ### 📦 Package Changes
 
 - **Analyzer Location**: `analyzers/dotnet/cs/StrongInject.Generator.Roslyn40.dll`
-- **API Surface**: No changes to the public API (`netstandard2.0` surface maintained)
+- **API Surface**: Source-compatible with 1.x (`netstandard2.0` surface maintained); 2.0 only adds non-breaking hardening - standard `StrongInjectException` constructors, argument null-validation in the container extension methods, and `sealed` on the obsolete attributes
 - **Backwards Compatibility**: Code using StrongInject 1.x will compile without changes in 2.0, but **build toolchain** must support Roslyn 4.0+
 
 ### 🐛 Bug Fixes

@@ -64,7 +64,7 @@ namespace StrongInject.Generator
 
             // Ideally we would use the location of the interface in the base list, however getting that location is complex and not critical for now.
             // See http://sourceroslyn.io/#Microsoft.CodeAnalysis.CSharp/Symbols/Source/SourceMemberContainerSymbol_ImplementationChecks.cs,333
-            _containerDeclarationLocation = ((TypeDeclarationSyntax)_container.DeclaringSyntaxReferences[0].GetSyntax()).Identifier.GetLocation();
+            _containerDeclarationLocation = ((TypeDeclarationSyntax)_container.DeclaringSyntaxReferences[0].GetSyntax(_cancellationToken)).Identifier.GetLocation();
         }
 
         private string GenerateContainerImplementations()
@@ -813,7 +813,7 @@ namespace StrongInject.Generator
             }
         }
 
-        private void GenerateInitializeCall(AutoIndenter methodSource, string? variableName, string variableToInitializeName, bool isAsync)
+        private static void GenerateInitializeCall(AutoIndenter methodSource, string? variableName, string variableToInitializeName, bool isAsync)
         {
             if (isAsync)
             {

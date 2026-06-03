@@ -5,7 +5,7 @@ namespace StrongInject.Generator.Visitors
 {
     internal class RequiresUnsafeVisitor : SimpleVisitor
     {
-        private bool _requiresUnsafe = false;
+        private bool _requiresUnsafe;
 
         private RequiresUnsafeVisitor(InstanceSourcesScope containerScope, CancellationToken cancellationToken) : base(containerScope, cancellationToken)
         {

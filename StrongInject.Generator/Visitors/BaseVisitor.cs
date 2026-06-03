@@ -8,7 +8,7 @@ namespace StrongInject.Generator.Visitors
     {
         protected readonly CancellationToken _cancellationToken;
         
-        private bool _exitFast = false;
+        private bool _exitFast;
 
         protected BaseVisitor(CancellationToken cancellationToken)
         {

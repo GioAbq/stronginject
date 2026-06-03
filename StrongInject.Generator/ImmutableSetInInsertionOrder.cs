@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StrongInject.Generator
 {
@@ -188,6 +189,7 @@ namespace StrongInject.Generator
             return false;
         }
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Mirrors the IImmutableSet<T>.Clear() instance contract; keeping it instance-level matches the immutable-collection idiom and existing call sites.")]
         public ImmutableSetInInsertionOrder<T> Clear() => Empty;
 
         IImmutableSet<T> IImmutableSet<T>.Clear() => Clear();

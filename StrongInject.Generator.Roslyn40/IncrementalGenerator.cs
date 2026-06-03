@@ -187,11 +187,11 @@ namespace StrongInject.Generator
             var stringBuilder = new StringBuilder(container.ContainingNamespace.FullName());
             foreach (var type in container.GetContainingTypesAndThis().Reverse())
             {
-                stringBuilder.Append(".");
+                stringBuilder.Append('.');
                 stringBuilder.Append(type.Name);
                 if (type.TypeParameters.Length > 0)
                 {
-                    stringBuilder.Append("_");
+                    stringBuilder.Append('_');
                     stringBuilder.Append(type.TypeParameters.Length);
                 }
             }

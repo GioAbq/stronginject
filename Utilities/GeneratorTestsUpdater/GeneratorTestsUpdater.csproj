@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <Configurations>Debug;Release;Wpf;All</Configurations>
+    <!-- CA analyzers that are noise in this dev-only test-updating utility; shipped code keeps full CA rigor. -->
+    <NoWarn>$(NoWarn);CA1062;CA1305;CA1307;CA1310;CA1724;CA1852</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

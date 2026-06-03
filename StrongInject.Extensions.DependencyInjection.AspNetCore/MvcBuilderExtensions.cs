@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
+﻿using System;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -13,6 +14,7 @@ namespace StrongInject.Extensions.DependencyInjection.AspNetCore
         /// <returns>The <see cref="IMvcBuilder"/>.</returns>
         public static IMvcBuilder ResolveControllersThroughServiceProvider(this IMvcBuilder builder)
         {
+            if (builder is null) throw new ArgumentNullException(nameof(builder));
             builder.PartManager.PopulateFeature(new ControllerFeature());
             builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
             return builder;

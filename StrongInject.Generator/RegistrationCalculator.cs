@@ -1017,7 +1017,7 @@ namespace StrongInject.Generator
             }
         }
 
-        private InstanceSource ApplyOptions(InstanceSource instanceSource, Options options, Dictionary<ITypeSymbol, InstanceSources> registrations, HashSet<ITypeSymbol>? currentlyVisiting = null)
+        private static InstanceSource ApplyOptions(InstanceSource instanceSource, Options options, Dictionary<ITypeSymbol, InstanceSources> registrations, HashSet<ITypeSymbol>? currentlyVisiting = null)
         {
             var useAsFactory = options.HasFlag(Options.UseAsFactory);
             if (useAsFactory && currentlyVisiting is null)

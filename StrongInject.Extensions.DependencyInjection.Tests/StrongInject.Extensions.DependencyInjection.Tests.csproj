@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <Configurations>Debug;Release;Wpf;All</Configurations>
+    <!-- CA analyzers that are noise in test code; shipped code keeps full CA rigor. -->
+    <NoWarn>$(NoWarn);CA1051;CA1063;CA1707;CA1816;CA2000;CA2234</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
