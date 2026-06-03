@@ -15,22 +15,12 @@ public partial class Container : IContainer<LoggerService>
         return new(null, true, providerCollection);
     }
 
-    // Current workaround: StrongInject requires FactoryOf with open generic to return the type parameter directly
-    // We wrap it to return ILogger<T>
+    // StrongInject 2.0: [FactoryOf] on an open generic can return the constructed generic type directly,
+    // so ILogger<T> is resolved with no runtime reflection (pre-2.0 the method had to return the bare T).
     [FactoryOf(typeof(ILogger<>))]
-    public static T CreateLogger<T>(SerilogLoggerFactory loggerFactory) where T : class
+    public static ILogger<T> CreateLogger<T>(SerilogLoggerFactory loggerFactory)
     {
-        // T will be ILogger<SomeType>, extract SomeType and create the logger
-        var loggerType = typeof(T);
-        if (!loggerType.IsGenericType || loggerType.GetGenericTypeDefinition() != typeof(ILogger<>))
-        {
-            throw new InvalidOperationException($"CreateLogger can only create ILogger<T>, not {typeof(T)}");
-        }
-        
-        var targetType = loggerType.GetGenericArguments()[0];
-        var method = typeof(SerilogLoggerFactory).GetMethod(nameof(SerilogLoggerFactory.CreateLogger))!
-            .MakeGenericMethod(targetType);
-        return (T)method.Invoke(loggerFactory, null)!;
+        return loggerFactory.CreateLogger<T>();
     }
 
     [Factory(Scope.SingleInstance)]
