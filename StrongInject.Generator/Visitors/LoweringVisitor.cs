@@ -11,7 +11,7 @@ namespace StrongInject.Generator.Visitors
         private readonly RequiresAsyncChecker _requiresAsyncChecker;
         private readonly Dictionary<InstanceSource, (Operation operation, string name)> _existingVariables = new();
         private readonly Dictionary<DelegateSource, string> _currentlyVisitingDelegates;
-        private int _variableCount = 0;
+        private int _variableCount;
         private readonly InstanceSource _target;
         private readonly InstanceSourcesScope _containerScope;
         private readonly DisposalLowerer _disposalLowerer;

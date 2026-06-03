@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 
@@ -190,6 +191,7 @@ namespace StrongInject.Generator
             private AttributeComparer() { }
 
             public static readonly AttributeComparer Instance = new();
+            [SuppressMessage("Maintainability", "CA1508:Avoid dead conditional code", Justification = "AttributeClass is only proven non-null by the Debug.Assert, which is a no-op in Release; the null-conditional access stays as intentional defensive code.")]
             public int Compare(AttributeData x, AttributeData y)
             {
                 Debug.Assert(

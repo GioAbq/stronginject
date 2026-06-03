@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <Configurations>Debug;Release;Wpf;All</Configurations>
+    <!-- CA analyzers that are noise in test code; shipped code keeps full CA rigor. -->
+    <NoWarn>$(NoWarn);CA1051;CA1063;CA1707;CA1816;CA2000;CA2234</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StrongInject.Extensions.DependencyInjection.AspNetCore\StrongInject.Extensions.DependencyInjection.AspNetCore.csproj" />
     <ProjectReference Include="..\StrongInject.Generator\StrongInject.Generator.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\StrongInject.Generator.Roslyn38\StrongInject.Generator.Roslyn38.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\StrongInject.Generator.Roslyn40\StrongInject.Generator.Roslyn40.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
 </Project>

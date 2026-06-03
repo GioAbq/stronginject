@@ -22,7 +22,7 @@ namespace StrongInject.Generator.Visitors
         
         private class Visitor : SimpleVisitor
         {
-            private bool _requiresAsync = false;
+            private bool _requiresAsync;
 
             private Visitor(InstanceSourcesScope containerScope, CancellationToken cancellationToken) : base(containerScope, cancellationToken)
             {

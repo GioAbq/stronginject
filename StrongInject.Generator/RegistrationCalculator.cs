@@ -918,9 +918,22 @@ namespace StrongInject.Generator
                         ? new FactoryMethod(method, taskOfType, scope, IsOpenGeneric: true, IsAsync: true)
                         : new FactoryMethod(method, returnType, scope, IsOpenGeneric: true, IsAsync: false);
 
-                    if (type is INamedTypeSymbol { IsUnboundGenericType: true })
+                    if (type is INamedTypeSymbol unboundType && unboundType.IsUnboundGenericType)
                     {
-                        if (underlyingFactoryMethod.FactoryOfType is not ITypeParameterSymbol)
+                        var factoryOfReturnType = underlyingFactoryMethod.FactoryOfType;
+                        if (factoryOfReturnType is ITypeParameterSymbol)
+                        {
+                            yield return new FactoryOfMethod(underlyingFactoryMethod, type);
+                        }
+                        else if (factoryOfReturnType is INamedTypeSymbol returnNamedType
+                                 && returnNamedType.IsGenericType
+                                 && SymbolEqualityComparer.Default.Equals(
+                                        returnNamedType.OriginalDefinition,
+                                        unboundType.OriginalDefinition))
+                        {
+                            yield return new FactoryOfMethod(underlyingFactoryMethod, type);
+                        }
+                        else
                         {
                             reportDiagnostic(FactoryOfOpenGenericMustReturnSingleTypeParamater(
                                 method,
@@ -928,8 +941,6 @@ namespace StrongInject.Generator
                                 attribute.ApplicationSyntaxReference?.GetSyntax(_cancellationToken).GetLocation() ?? Location.None));
                             continue;
                         }
-
-                        yield return new FactoryOfMethod(underlyingFactoryMethod, type);
                     }
                     else
                     {
@@ -1006,7 +1017,7 @@ namespace StrongInject.Generator
             }
         }
 
-        private InstanceSource ApplyOptions(InstanceSource instanceSource, Options options, Dictionary<ITypeSymbol, InstanceSources> registrations, HashSet<ITypeSymbol>? currentlyVisiting = null)
+        private static InstanceSource ApplyOptions(InstanceSource instanceSource, Options options, Dictionary<ITypeSymbol, InstanceSources> registrations, HashSet<ITypeSymbol>? currentlyVisiting = null)
         {
             var useAsFactory = options.HasFlag(Options.UseAsFactory);
             if (useAsFactory && currentlyVisiting is null)
@@ -1746,8 +1757,8 @@ namespace StrongInject.Generator
             return Diagnostic.Create(
                 new DiagnosticDescriptor(
                     "SI0028",
-                    "Method marked with FactoryOfAttribute of open generic type must have a single type parameter, and return that type parameter.",
-                    "Method '{0}' marked with FactoryOfAttribute of open generic type '{1}' must have a single type parameter, and return that type parameter.",
+                    "Method marked with FactoryOfAttribute of open generic type must return either a type parameter, or a constructed generic type matching the FactoryOf type.",
+                    "Method '{0}' marked with FactoryOfAttribute of open generic type '{1}' must return either a type parameter, or a constructed generic type matching the FactoryOf type.",
                     "StrongInject",
                     DiagnosticSeverity.Error,
                     isEnabledByDefault: true),

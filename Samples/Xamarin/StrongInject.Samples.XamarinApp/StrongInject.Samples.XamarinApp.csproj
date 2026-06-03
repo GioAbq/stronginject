@@ -5,6 +5,8 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <Configurations>Debug;Release;AndroidApp;Wpf;All</Configurations>
     <TargetPlatformVersion>10.0.17763.0</TargetPlatformVersion>
+    <!-- CA analyzers that are noise in sample/demo code; shipped code keeps full CA rigor. -->
+    <NoWarn>$(NoWarn);CA1031;CA1054;CA1062;CA1063;CA1805;CA1822;CA1859;CA2000;CA2234</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

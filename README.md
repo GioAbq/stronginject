@@ -62,15 +62,27 @@ Logo kindly contributed by [@onelioubov](https://github.com/onelioubov) and [@kh
 
 ## Requirements
 
-[Visual Studio 16.8](https://visualstudio.microsoft.com/vs) or greater
+**StrongInject 2.0** (current version):
+- [Visual Studio 2022](https://visualstudio.microsoft.com/vs) or later
+- [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) or later (recommend .NET 8 or .NET 10)
 
-[.NET 5.0.102 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) or greater
+**StrongInject 1.x** (for legacy projects):
+- [Visual Studio 16.8](https://visualstudio.microsoft.com/vs) or greater
+- [.NET 5.0.102 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) or greater
+
+> **⚠️ Breaking Change in 2.0:**  
+> StrongInject 2.0 uses the new Incremental Source Generators API (Roslyn 4.0+) for significantly improved performance and caching. This requires Visual Studio 2022 and .NET 6 SDK minimum.  
+> If you need Visual Studio 2019 or .NET 5 SDK support, please use StrongInject 1.x by pinning to `<PackageReference Include="StrongInject" Version="1.*" />`
 
 ## NuGet
 
 https://www.nuget.org/packages/StrongInject/
 
-`<PackageReference Include="StrongInject" Version="1.*.*" />`
+**For StrongInject 2.0 (current):**  
+`<PackageReference Include="StrongInject" Version="2.*" />`
+
+**For StrongInject 1.x (legacy):**  
+`<PackageReference Include="StrongInject" Version="1.*" />`
 
 ## How It Works
 

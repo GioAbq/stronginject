@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+
+    <!-- Standalone sample (not in StrongInject.sln / CI): opt out of the repo's strict analysis so a plain
+         `dotnet run` works without the solution-wide TreatWarningsAsErrors=false flag. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+  </ItemGroup>
+
+  <!-- This sample demonstrates the StrongInject 2.0 [FactoryOf] constructed-generic-return feature, so it
+       references the in-repo 2.0 generator directly (2.0 is not yet published to NuGet). The runtime is a
+       normal reference; the generator (Roslyn40 + its Generator dependency) is consumed as an analyzer. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\StrongInject\StrongInject.csproj" />
+    <ProjectReference Include="..\..\StrongInject.Generator.Roslyn40\StrongInject.Generator.Roslyn40.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\StrongInject.Generator\StrongInject.Generator.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

@@ -7,148 +7,191 @@ using System.Threading;
 
 namespace StrongInject.Generator
 {
+    /// <summary>
+    /// Incremental generator for StrongInject containers and modules.
+    ///
+    /// Design notes (why it looks the way it does):
+    /// - The syntax provider carries the actual <see cref="ClassDeclarationSyntax"/> node through the
+    ///   pipeline, so the container/module symbol is always resolved from the SAME compilation snapshot
+    ///   the node belongs to. Re-deriving the symbol from a cached <see cref="Location"/> against a later
+    ///   compilation is unsafe: an edited file's old tree is no longer part of the new compilation and
+    ///   <c>GetSemanticModel</c> throws (CS8785).
+    /// - <see cref="CompilationWrapper"/> wraps the compilation with an <c>Equals</c> that always returns
+    ///   true, so a compilation change does NOT invalidate the final <c>Combine</c>. RegisterSourceOutput
+    ///   then re-runs only when a tracked class's syntax actually changes - editing an unrelated file
+    ///   regenerates nothing. The callback still observes the freshest compilation via the wrapper property.
+    /// </summary>
     [Generator]
     internal class IncrementalGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var trees = context.SyntaxProvider.CreateSyntaxProvider((node, _) =>
-            {
-                if (node is not ClassDeclarationSyntax
-                    {
-                        BaseList: var baseList,
-                        AttributeLists: var attributes,
-                        Members: var members,
-                    })
+            // Cheap syntax-level filtering first, then semantic confirmation. Returns the node itself so
+            // the symbol can be resolved consistently from the compilation in the output stage.
+            var candidates = context.SyntaxProvider.CreateSyntaxProvider(
+                predicate: static (node, _) => IsPotentialContainerOrModule(node),
+                transform: static (ctx, cancellationToken) =>
                 {
-                    return false;
-                }
-
-                if (baseList is not null)
-                {
-                    foreach (var type in baseList.Types)
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, cancellationToken) is not INamedTypeSymbol type)
                     {
-                        if (type.Type is NameSyntax name && WellKnownTypes.IsContainerCandidate(name))
-                        {
-                            return true;
-                        }
+                        return default;
                     }
-                }
 
-                foreach (var attributeList in attributes)
-                {
-                    foreach (var attribute in attributeList.Attributes)
-                    {
-                        if (WellKnownTypes.IsClassAttributeCandidate(attribute.Name))
-                        {
-                            return true;
-                        }
-                    }
-                }
+                    var isContainer = type.AllInterfaces.Any(x => WellKnownTypes.IsContainerOrAsyncContainer(x));
 
-                foreach (var member in members)
-                {
-                    foreach (var attributeList in member.AttributeLists)
-                    {
-                        foreach (var attribute in attributeList.Attributes)
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!isContainer
+                        && !type.GetAttributes().Any(x => WellKnownTypes.IsClassAttribute(x.AttributeClass))
+                        && !type.GetMembers().Any(x =>
                         {
-                            if (WellKnownTypes.IsMemberAttributeCandidate(attribute.Name))
+                            if (x is IFieldSymbol or IPropertySymbol && x.GetAttributes().Any(a => WellKnownTypes.IsInstanceAttribute(a.AttributeClass)))
                             {
                                 return true;
                             }
-                        }
-                    }
-                }
 
-                return false;
-            }, (ctx, cancellationToken) =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, cancellationToken) is not INamedTypeSymbol type)
-                {
-                    return default;
-                }
-
-                var isContainer = type.AllInterfaces.Any(x => WellKnownTypes.IsContainerOrAsyncContainer(x));
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!isContainer
-                    && !type.GetAttributes().Any(x => WellKnownTypes.IsClassAttribute(x.AttributeClass))
-                    && !type.GetMembers().Any(x =>
+                            return x is IMethodSymbol && x.GetAttributes().Any(a => WellKnownTypes.IsMethodAttribute(a.AttributeClass));
+                        }))
                     {
-                        if (x is IFieldSymbol or IPropertySymbol && x.GetAttributes().Any(x => WellKnownTypes.IsInstanceAttribute(x.AttributeClass)))
-                        {
-                            return true;
-                        }
+                        return default;
+                    }
 
-                        return x is IMethodSymbol && x.GetAttributes().Any(x => WellKnownTypes.IsMethodAttribute(x.AttributeClass));
-                    }))
-                {
-                    return default;
-                }
+                    return (isContainer, node: (ClassDeclarationSyntax)ctx.Node);
+                });
 
-                return (isContainer, ctx.Node);
-            });
+            var compilationWrapper = context.CompilationProvider.Select(static (x, _) => new CompilationWrapper(x));
 
-            var compilationWrapper = context.CompilationProvider.Select((x, _) => new CompilationWrapper(x));
-
-            context.RegisterSourceOutput(trees.Combine(compilationWrapper), (context, x) =>
+            context.RegisterSourceOutput(candidates.Combine(compilationWrapper), static (context, pair) =>
             {
-                var (isContainer, node) = x.Left;
+                var (isContainer, node) = pair.Left;
                 if (node is null)
                 {
                     return;
                 }
-                var compilation = x.Right.Compilation;
-                var cancellationToken = context.CancellationToken;
-                var reportDiagnostic = context.ReportDiagnostic;
-                if (compilation.GetSemanticModel(node.SyntaxTree).GetDeclaredSymbol(node, cancellationToken) is not INamedTypeSymbol type)
-                {
-                    throw new InvalidOperationException(node.ToString());
-                }
 
-                if (!type.IsInternal() && !type.IsPublic())
-                {
-                    reportDiagnostic(ModuleNotPublicOrInternal(
-                        type,
-                        ((TypeDeclarationSyntax)node).Identifier
-                        .GetLocation()));
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!WellKnownTypes.TryCreate(compilation, reportDiagnostic, out var wellKnownTypes))
-                {
-                    return;
-                }
-
-                var registrationCalculator = new RegistrationCalculator(compilation, wellKnownTypes, cancellationToken);
-                if (!isContainer)
-                {
-                    registrationCalculator.ValidateModuleRegistrations(type, reportDiagnostic);
-                    return;
-                }
-
-                var file = ContainerGenerator.GenerateContainerImplementations(
-                    type,
-                    registrationCalculator.GetContainerRegistrations(type, reportDiagnostic),
-                    wellKnownTypes,
-                    reportDiagnostic,
-                    cancellationToken);
-
-                context.AddSource(GenerateNameHint(type), file);
+                GenerateContainerOrValidateModule(context, isContainer, node, pair.Right.Compilation);
             });
         }
 
-        private string GenerateNameHint(INamedTypeSymbol container)
+        private static bool IsPotentialContainerOrModule(SyntaxNode node)
+        {
+            if (node is not ClassDeclarationSyntax
+                {
+                    BaseList: var baseList,
+                    AttributeLists: var attributes,
+                    Members: var members,
+                })
+            {
+                return false;
+            }
+
+            // Check if class implements IContainer/IAsyncContainer interface
+            if (baseList is not null)
+            {
+                foreach (var type in baseList.Types)
+                {
+                    if (type.Type is NameSyntax name && WellKnownTypes.IsContainerCandidate(name))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Check for StrongInject attributes on the class
+            foreach (var attributeList in attributes)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    if (WellKnownTypes.IsClassAttributeCandidate(attribute.Name))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Check for StrongInject attributes on members (fields, properties, methods)
+            foreach (var member in members)
+            {
+                foreach (var attributeList in member.AttributeLists)
+                {
+                    foreach (var attribute in attributeList.Attributes)
+                    {
+                        if (WellKnownTypes.IsMemberAttributeCandidate(attribute.Name))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static void GenerateContainerOrValidateModule(
+            SourceProductionContext context,
+            bool isContainer,
+            ClassDeclarationSyntax node,
+            Compilation compilation)
+        {
+            var cancellationToken = context.CancellationToken;
+
+            // Resolve the symbol from the node's own tree within THIS compilation. Because the node flows
+            // from the syntax provider tracking this compilation, its tree is guaranteed to be part of it.
+            var semanticModel = compilation.GetSemanticModel(node.SyntaxTree);
+            if (semanticModel.GetDeclaredSymbol(node, cancellationToken) is not INamedTypeSymbol symbol)
+            {
+                return;
+            }
+
+            if (!WellKnownTypes.TryCreate(compilation, context.ReportDiagnostic, out var wellKnownTypes))
+            {
+                return;
+            }
+
+            var location = node.Identifier.GetLocation();
+            var registrationCalculator = new RegistrationCalculator(compilation, wellKnownTypes, cancellationToken);
+
+            if (!isContainer)
+            {
+                // This is a module - validate registrations first, then check visibility
+                registrationCalculator.ValidateModuleRegistrations(symbol, context.ReportDiagnostic);
+
+                // Check visibility (report but don't early return to allow registration validation)
+                if (!symbol.IsInternal() && !symbol.IsPublic())
+                {
+                    context.ReportDiagnostic(ModuleNotPublicOrInternal(symbol, location));
+                }
+                return;
+            }
+
+            // Check visibility for containers
+            if (!symbol.IsInternal() && !symbol.IsPublic())
+            {
+                context.ReportDiagnostic(ModuleNotPublicOrInternal(symbol, location));
+                return;
+            }
+
+            // It's a container - generate full implementation
+            var file = ContainerGenerator.GenerateContainerImplementations(
+                symbol,
+                registrationCalculator.GetContainerRegistrations(symbol, context.ReportDiagnostic),
+                wellKnownTypes,
+                context.ReportDiagnostic,
+                cancellationToken);
+
+            context.AddSource(GenerateNameHint(symbol), file);
+        }
+
+        private static string GenerateNameHint(INamedTypeSymbol container)
         {
             var stringBuilder = new StringBuilder(container.ContainingNamespace.FullName());
             foreach (var type in container.GetContainingTypesAndThis().Reverse())
             {
-                stringBuilder.Append(".");
+                stringBuilder.Append('.');
                 stringBuilder.Append(type.Name);
                 if (type.TypeParameters.Length > 0)
                 {
-                    stringBuilder.Append("_");
+                    stringBuilder.Append('_');
                     stringBuilder.Append(type.TypeParameters.Length);
                 }
             }
@@ -157,7 +200,7 @@ namespace StrongInject.Generator
             return stringBuilder.ToString();
         }
 
-        private Diagnostic ModuleNotPublicOrInternal(ITypeSymbol module, Location location)
+        private static Diagnostic ModuleNotPublicOrInternal(ITypeSymbol module, Location location)
         {
             return Diagnostic.Create(
                 new DiagnosticDescriptor(
@@ -170,7 +213,13 @@ namespace StrongInject.Generator
                 location,
                 module.ToDisplayString());
         }
-        
+
+        /// <summary>
+        /// Wraps a <see cref="Compilation"/> so that incremental comparison never reports a change:
+        /// <see cref="Equals(CompilationWrapper)"/> always returns true (while swapping in the newest
+        /// compilation by version). This lets the final Combine stay cached across compilation changes,
+        /// so source output re-runs only when the tracked class syntax changes.
+        /// </summary>
         private class CompilationWrapper : IEquatable<CompilationWrapper>
         {
             // We need to lock both this and other for Equals, which is difficult to do without risking a deadlock.
@@ -196,7 +245,7 @@ namespace StrongInject.Generator
                 _compilation = compilation;
                 _version = Interlocked.Increment(ref _nextVersion);
             }
-    
+
             public bool Equals(CompilationWrapper? other)
             {
                 if (other is null)

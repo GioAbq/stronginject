@@ -6,6 +6,8 @@
     <UseWPF>true</UseWPF>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+    <!-- CA analyzers that are noise in sample/demo code; shipped code keeps full CA rigor. -->
+    <NoWarn>$(NoWarn);CA1062;CA2000;CA2227</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
