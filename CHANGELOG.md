@@ -5,7 +5,7 @@ All notable changes to StrongInject will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-03-XX
+## [2.0.0] - Unreleased
 
 ### 🚀 Major Changes
 
@@ -67,7 +67,7 @@ Visual Studio 2019 and .NET 5 SDK use Roslyn 3.x and cannot run incremental gene
 
 ## [1.x] - Legacy Branch
 
-StrongInject 1.x is maintained on the `release/1.x` branch for critical bug fixes and security patches.
+StrongInject 1.x is frozen at the last published 1.4.x package on NuGet. There is no `release/1.x` maintenance branch, and no further 1.x updates (including bug fixes) are planned.
 
 **Minimum Requirements for 1.x:**
 - Visual Studio 16.8 or later
