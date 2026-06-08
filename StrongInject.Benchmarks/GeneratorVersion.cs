@@ -61,6 +61,20 @@ namespace StrongInject.Benchmarks
             _ => throw new System.ArgumentOutOfRangeException(nameof(version)),
         });
 
+        /// <summary>
+        /// The netstandard2.1 StrongInject runtime, used by the ASYNC scenarios: its <c>IAsyncContainer</c>
+        /// surfaces <c>IAsyncDisposable</c> from the netstandard2.1 BCL (resolvable via the referenced
+        /// <c>netstandard.dll</c>), whereas the netstandard2.0 build references Microsoft.Bcl.AsyncInterfaces,
+        /// which is not in the benchmark's reference set. Mirrors StrongInject.Tests.Unit/TestBase.cs, which
+        /// references the netstandard2.1 build for the same reason. Falls back to the netstandard2.0 path if
+        /// the 2.1 build is absent.
+        /// </summary>
+        public static string StrongInjectDll21(GeneratorVersion version)
+        {
+            var ns21 = StrongInjectDll(version).Replace("netstandard2.0", "netstandard2.1");
+            return File.Exists(ns21) ? ns21 : StrongInjectDll(version);
+        }
+
         /// <summary>Throws a clear error if any expected DLL is missing (e.g. cache cleared).</summary>
         public static void Verify(GeneratorVersion version)
         {
