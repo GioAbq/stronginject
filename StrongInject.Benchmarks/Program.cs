@@ -14,7 +14,24 @@ namespace StrongInject.Benchmarks
         private static int Main(string[] args)
         {
             // Stage 2: `dotnet run -c Release -- bench` runs the BenchmarkDotNet wall-clock comparison.
+            // Shape axis: `-- async [width] [depth...]` runs the deterministic async-lattice scaling sweep
+            // (targets LoweringVisitor.FindLongestPath); `-- bench-async` runs its BenchmarkDotNet version.
             // Default (no arg): Stage 1 deterministic re-compute / CS8785 diagnostic.
+            if (args.Length > 0 && args[0].Equals("bench-async", StringComparison.OrdinalIgnoreCase))
+            {
+                BenchmarkRunner.Run<AsyncGraphBenchmark>(AsyncGraphBenchmark.BuildConfig());
+                return 0;
+            }
+
+            if (args.Length > 0 && args[0].Equals("async", StringComparison.OrdinalIgnoreCase))
+            {
+                var width = args.Length > 1 && int.TryParse(args[1], out var w) ? w : 2;
+                var depths = args.Length > 2
+                    ? args.Skip(2).Select(a => int.Parse(a)).ToArray()
+                    : new[] { 8, 12, 16, 18, 20, 22 };
+                return AsyncScalingDiagnostic.Run(width, depths);
+            }
+
             if (args.Length > 0 && IsBenchArg(args[0]))
             {
                 BenchmarkRunner.Run<GeneratorBenchmark>(GeneratorBenchmark.BuildConfig());

@@ -24,19 +24,31 @@ namespace StrongInject.Benchmarks
             => CSharpSyntaxTree.ParseText(source, ParseOptions, path: path);
 
         public static CSharpCompilation Create(GeneratorVersion version, SyntheticProject project, out ImmutableArray<SyntaxTree> trees)
+            => Create(version, project.Files(), out trees);
+
+        /// <summary>Builds the compilation from an arbitrary set of source files (e.g. <see cref="AsyncLatticeProject"/>).</summary>
+        public static CSharpCompilation Create(GeneratorVersion version, IReadOnlyList<(string Path, string Source)> files, out ImmutableArray<SyntaxTree> trees)
+            => Create(GeneratorPaths.StrongInjectDll(version), files, out trees);
+
+        /// <summary>
+        /// Builds the compilation against an explicit StrongInject runtime assembly. Async scenarios pass
+        /// <see cref="GeneratorPaths.StrongInjectDll21"/> so <c>IAsyncDisposable</c> resolves without
+        /// Microsoft.Bcl.AsyncInterfaces.
+        /// </summary>
+        public static CSharpCompilation Create(string strongInjectDll, IReadOnlyList<(string Path, string Source)> files, out ImmutableArray<SyntaxTree> trees)
         {
-            trees = project.Files()
+            trees = files
                 .Select(f => ParseFile(f.Path, f.Source))
                 .ToImmutableArray();
 
             return CSharpCompilation.Create(
                 "SyntheticBenchmark",
                 trees,
-                BuildReferences(version),
+                BuildReferences(strongInjectDll),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
         }
 
-        private static IReadOnlyList<MetadataReference> BuildReferences(GeneratorVersion version)
+        private static IReadOnlyList<MetadataReference> BuildReferences(string strongInjectDll)
         {
             var coreDir = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
 
@@ -51,7 +63,7 @@ namespace StrongInject.Benchmarks
                 typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location,
                 Path.Combine(coreDir, "netstandard.dll"),
                 Path.Combine(coreDir, "System.Runtime.dll"),
-                GeneratorPaths.StrongInjectDll(version),
+                strongInjectDll,
             };
 
             return paths
