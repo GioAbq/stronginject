@@ -404,6 +404,12 @@ namespace StrongInject.Generator.Visitors
 
                 Operation longestPathSoFar = default!;
                 int longestPathLengthSoFar = 0;
+                // Greatest path length each operation has already been explored at. Re-entering an operation
+                // at a length we have already covered cannot produce a strictly longer path below it, so the
+                // selected longestPathSoFar is unchanged - but a shared subgraph reachable by many paths is
+                // now walked once per distinct (increasing) length instead of once per path. This turns the
+                // previously exponential DFS (Width^Depth on a wide async dependency graph) polynomial.
+                var exploredAtLength = new Dictionary<Operation, int>();
                 FindLongestPath(operations[operations.Count - 1], 0);
                 builder.Add(longestPathSoFar);
                 ordered.Add(longestPathSoFar);
@@ -420,6 +426,10 @@ namespace StrongInject.Generator.Visitors
                             longestPathLengthSoFar = pathLength;
                         }
                     }
+
+                    if (exploredAtLength.TryGetValue(operation, out var explored) && explored >= pathLength)
+                        return;
+                    exploredAtLength[operation] = pathLength;
 
                     foreach (var dependency in operation.Dependencies)
                     {
