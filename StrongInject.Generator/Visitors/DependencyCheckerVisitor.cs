@@ -61,7 +61,7 @@ namespace StrongInject.Generator.Visitors
                     }
                     else
                     {
-                        _reportDiagnostic(NoSourceForType(_location, _target, type));
+                        _reportDiagnostic(NoSourceForType(_location, _target, type, parameterSymbol));
                         _anyErrors = true;
                     }
 
@@ -408,20 +408,35 @@ namespace StrongInject.Generator.Visitors
                     type.ToDisplayString());
         }
 
-        private Diagnostic NoSourceForType(Location location, ITypeSymbol target, ITypeSymbol type)
+        private Diagnostic NoSourceForType(Location location, ITypeSymbol target, ITypeSymbol type, IParameterSymbol? parameterSymbol)
         {
+            var resolutionPath = PrintResolutionPath();
             return Diagnostic.Create(
                 new DiagnosticDescriptor(
                         "SI0102",
                         "No source for instance of Type",
-                        "Error while resolving dependencies for '{0}': We have no source for instance of type '{1}'",
+                        "Error while resolving dependencies for '{0}': We have no source for instance of type '{1}'{2}{3}",
                         "StrongInject",
                         DiagnosticSeverity.Error,
                         isEnabledByDefault: true,
-                        PrintResolutionPath()),
+                        resolutionPath),
                     location,
                     target.ToDisplayString(),
-                    type.ToDisplayString());
+                    type.ToDisplayString(),
+                    DescribeMissingDependencyContext(parameterSymbol),
+                    resolutionPath is null ? "" : "\n" + resolutionPath.TrimEnd());
+        }
+
+        // Points the user at where the missing type is actually needed: the constructor/factory
+        // parameter that requires it, or - when it is the container's own resolution target - the
+        // fact that nothing registers it. The full chain is also available via PrintResolutionPath.
+        private string DescribeMissingDependencyContext(IParameterSymbol? parameterSymbol)
+        {
+            if (parameterSymbol is not null)
+                return $", required by parameter '{parameterSymbol.Name}' of '{parameterSymbol.ContainingSymbol.ToDisplayString()}'";
+            if (_resolutionPath.Count > 0)
+                return $", required by '{_resolutionPath[_resolutionPath.Count - 1].OfType.ToDisplayString()}'";
+            return ". This type is a resolution target of the container, but nothing registers it - add a registration, factory, or instance for it";
         }
 
         private Diagnostic RequiresAsyncResolution(Location location, ITypeSymbol target, ITypeSymbol type)
